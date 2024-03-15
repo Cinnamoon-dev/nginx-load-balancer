@@ -1,0 +1,47 @@
+services:
+  nginx:
+    container_name: nginx
+    image: nginx:1.25.4-alpine
+    volumes:
+      - ./nginx:/etc/nginx
+    ports:
+      - 3379:3379
+    networks:
+      - backend
+  api1:
+    container_name: test1
+    build: 
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      - PORT=8000
+    expose:
+      - 8000
+    networks:
+      - backend
+  api2:
+    container_name: test2
+    build: 
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      - PORT=8001
+    expose:
+      - 8001
+    networks:
+      - backend
+  api3:
+    container_name: test3
+    build: 
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      - PORT=8002
+    expose:
+      - 8002
+    networks:
+      - backend
+
+networks:
+  backend:
+  
