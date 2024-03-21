@@ -39,7 +39,6 @@ services:
     depends_on:
       postgresdb:
         condition: service_healthy
-      
     environment:
       - PORT=8000
       - SQLALCHEMY_DATABASE_URI=postgresql://postgres:1234@postgresdb:5432/loadtest
