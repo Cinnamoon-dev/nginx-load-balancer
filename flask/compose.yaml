@@ -4,8 +4,29 @@ services:
     image: nginx:1.25-alpine
     volumes:
       - ./nginx:/etc/nginx
+    depends_on:
+      - api1
+      - api2
+      - api3
     ports:
       - 3379:3379
+    networks:
+      - backend
+
+  postgresdb:
+    container_name: postgres_db
+    image: postgres:16.0-alpine
+    volumes:
+      - /opt/postgres/16-alpine:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=1234
+    expose:
+      - 5432
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 5s
+      timeout: 5s
+      retries: 3
     networks:
       - backend
 
@@ -14,8 +35,14 @@ services:
     build: 
       context: .
       dockerfile: ./Dockerfile
+    command: ["./entrypoint.sh"]
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+      
     environment:
       - PORT=8000
+      - SQLALCHEMY_DATABASE_URI=postgresql://postgres:1234@postgresdb:5432/loadtest
     expose:
       - 8000
     networks:
@@ -26,8 +53,11 @@ services:
     build: 
       context: .
       dockerfile: ./Dockerfile
+    depends_on:
+      - api1
     environment:
       - PORT=8001
+      - SQLALCHEMY_DATABASE_URI=postgresql://postgres:1234@postgresdb:5432/loadtest
     expose:
       - 8001
     networks:
@@ -38,8 +68,11 @@ services:
     build: 
       context: .
       dockerfile: ./Dockerfile
+    depends_on:
+      - api1
     environment:
       - PORT=8002
+      - SQLALCHEMY_DATABASE_URI=postgresql://postgres:1234@postgresdb:5432/loadtest
     expose:
       - 8002
     networks:
