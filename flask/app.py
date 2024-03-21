@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, request
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 from flask_script import Manager, Server
@@ -12,6 +12,7 @@ SQLALCHEMY_DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI", "postgresql://pos
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
 app.config["DEBUG"] = True
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -47,7 +48,7 @@ class Cidade(db.Model):
 
 @app.route("/cidade/all", methods=["GET"])
 def cidadeAll():
-    cities = db.query(Cidade).all()
+    cities = Cidade.query.all()
     response = {
         "error": True,
         "cities": []
@@ -60,7 +61,7 @@ def cidadeAll():
     
 @app.route("/cidade/view/{id:int}")
 def cidadeView(id: int):
-    city = db.query(Cidade).get(id)
+    city = Cidade.query.get(id)
 
     if not city:
         return {"error": True, "message": "Not Found"}, 404
@@ -70,7 +71,23 @@ def cidadeView(id: int):
         "data": city.to_dict()
     }
 
-    return response
+    return response, 200
+
+@app.route("/cidade/add", methods=["POST"])
+def cidadeAdd():
+    data = request.get_json()
+
+    newCity = Cidade(data.get("nome"), data.get("sigla"))
+
+    try:
+        db.session.add(newCity)
+        db.session.flush()
+        db.session.commit()
+
+        return {"error": False, "message": "created successfully"}
+    except:
+        db.session.rollback()
+        return {"error": True, "message": "database error"}
 
 if __name__ == "__main__":
     manager.run()
