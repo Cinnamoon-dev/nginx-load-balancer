@@ -20,3 +20,6 @@ Ao criar a aplicação depara-se com outro problema, nem todas as instâncias da
 - O load balancer do nginx depende da existência de processos já rodando nas portas em que se pretende balancear a carga, logo o container do NGINX **vai depender de todas as instâncias da API**
 - A instância da api que irá fazer as migrations vai depender do setup do container do banco, logo irá haver um healthcheck para garantir a integridade do banco de dados postgres
 - Todas as instâncias da API que não fazem migrations vão depender da instância que faz, pois ela que vai deixar o banco no estado pronto de uso
+
+### Solução para migrations
+Criar as migrations e adicionar os dados mockados ao banco em uma instância do Docker Compose, então copiar a pasta migrations daquela instância para todas as outras instâncias e executar o flask db stamp em cada container em que a pasta foi adicionada.
